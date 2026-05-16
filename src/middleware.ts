@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken, TOKEN_COOKIE } from '@/lib/auth'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login']
+const PUBLIC_PATHS = ['/login', '/api/auth']
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -14,6 +14,10 @@ export function middleware(req: NextRequest) {
   const user = token ? verifyToken(token) : null
 
   if (!user) {
+    // Para rutas API devolver 401, para páginas redirigir al login
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
     const loginUrl = req.nextUrl.clone()
     loginUrl.pathname = '/login'
     return NextResponse.redirect(loginUrl)
