@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 })
   }
 
-  const token = createToken(email)
+  const token = await createToken(email)
   const res = NextResponse.json({ ok: true, email })
   res.cookies.set(TOKEN_COOKIE, token, {
     httpOnly: true,

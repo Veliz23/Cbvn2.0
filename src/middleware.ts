@@ -3,7 +3,7 @@ import { verifyToken, TOKEN_COOKIE } from '@/lib/auth'
 
 const PUBLIC_PATHS = ['/login', '/api/auth']
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
@@ -11,10 +11,9 @@ export function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get(TOKEN_COOKIE)?.value
-  const user = token ? verifyToken(token) : null
+  const user = token ? await verifyToken(token) : null
 
   if (!user) {
-    // Para rutas API devolver 401, para páginas redirigir al login
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
