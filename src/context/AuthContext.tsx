@@ -1,16 +1,13 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import {
-  User,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-} from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+
+interface AuthUser {
+  email: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -19,23 +16,33 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => {
-      setUser(u)
-      setLoading(false)
-    })
-    return unsub
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(({ user }) => setUser(user))
+      .finally(() => setLoading(false))
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password)
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    if (!res.ok) {
+      const { error } = await res.json()
+      throw new Error(error)
+    }
+    const { email: userEmail } = await res.json()
+    setUser({ email: userEmail })
   }
 
   const signOut = async () => {
-    await firebaseSignOut(auth)
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setUser(null)
   }
 
   return (

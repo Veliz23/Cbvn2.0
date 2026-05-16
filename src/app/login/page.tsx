@@ -19,8 +19,8 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
       router.replace('/dashboard')
-    } catch {
-      toast.error('Correo o contraseña incorrectos')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Credenciales incorrectas')
     } finally {
       setLoading(false)
     }
@@ -48,7 +48,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="admin@ejemplo.com"
+                  placeholder="admin@cbvn.com"
                   className="input pl-9"
                 />
               </div>
